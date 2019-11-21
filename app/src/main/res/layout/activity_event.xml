@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".View.EventActivity">
+
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Title"
+        android:textSize="20dp" />
+
+    <EditText
+        android:id="@+id/etTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="text"
+        android:hint="Enter Title" />
+
+    <TextView
+        android:id="@+id/tvDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="20dp"
+        android:text="Description" />
+
+    <EditText
+        android:id="@+id/etDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="text"
+        android:hint="Enter Description" />
+
+    <TextView
+        android:id="@+id/tvLocation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="20dp"
+        android:text="Location" />
+
+    <EditText
+        android:id="@+id/etLocation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="text"
+        android:hint="Enter Location (Ex. Bell 2267)" />
+
+    <TextView
+        android:id="@+id/tvGeo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="20dp"
+        android:text="GeoLocation" />
+
+    <TextView
+        android:id="@+id/tvLongitude"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Longitude: (updated when image taken)" />
+
+    <TextView
+        android:id="@+id/tvLatitude"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Latitude: (updated when image taken)" />
+
+    <TextView
+        android:id="@+id/tvImage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="20dp"
+        android:text="Image" />
+
+    <ImageView
+        android:id="@+id/image"
+        android:layout_width="match_parent"
+        android:layout_height="170dp"
+        app:srcCompat="@android:drawable/alert_light_frame" />
+
+    <Button
+        android:id="@+id/buttonImage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="Take Image"/>
+
+    <Button
+        android:id="@+id/buttonSubmit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="100dp"
+        android:onClick="buttonSubmit"
+        android:text="Submit Post" />
+
+
+</LinearLayout>
