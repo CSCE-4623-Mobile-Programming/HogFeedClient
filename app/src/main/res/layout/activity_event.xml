@@ -38,6 +38,21 @@
         android:hint="Enter Description" />
 
     <TextView
+        android:id="@+id/tvQuantity"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Quantity"
+        android:textSize="20dp" />
+
+    <EditText
+        android:id="@+id/etQuantity"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="Enter Quantity"
+        android:inputType="number" />
+
+    <TextView
         android:id="@+id/tvLocation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -95,7 +110,7 @@
         android:id="@+id/buttonSubmit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="100dp"
+        android:layout_marginTop="50dp"
         android:onClick="buttonSubmit"
         android:text="Submit Post" />
 

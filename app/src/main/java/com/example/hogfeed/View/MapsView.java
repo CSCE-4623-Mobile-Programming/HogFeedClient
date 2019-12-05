@@ -16,10 +16,17 @@ import android.Manifest;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.hogfeed.Model.ApiClient;
+import com.example.hogfeed.Model.Event;
 import com.example.hogfeed.Model.gpsHelper;
 import com.example.hogfeed.R;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -30,15 +37,30 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+
+import com.example.hogfeed.Model.ApiInterface;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+
+
 public class MapsView extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
+    GoogleSignInClient mGoogleSignInClient;
+
+    Button signOut;
+
+    TextView display;
 
     final private int REQUEST_CODE_ASK_MULTIPLE_PERMISSIONS = 124;
     private gpsHelper gps;
@@ -48,6 +70,8 @@ public class MapsView extends FragmentActivity implements OnMapReadyCallback {
     double lat;
     double lng;
 
+    ApiInterface apiInterface;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,13 +79,70 @@ public class MapsView extends FragmentActivity implements OnMapReadyCallback {
 
         askLocationPermission();
 
+        // Configure sign-in to request the user's ID, email address, and basic
+        // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .build();
+
+        // Build a GoogleSignInClient with the options specified by gso.
+        mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+
+        signOut = findViewById(R.id.buttonSignOut);
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
 
+        display = findViewById(R.id.tvDisplay);
+        GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
+
+        if(acct != null)
+        {
+            String userName = acct.getDisplayName();
+            String userEmail = acct.getEmail();
+            String userId = acct.getId();
+
+
+            display.setText("User: " + userName);
+        }
+
+
+        signOut.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                switch (v.getId()) {
+                    case R.id.buttonSignOut:
+                        signOut();
+                        toastMessage("Successfully Signed Out");
+                        finish();
+                        break;
+                    // ...
+                }
+
+            }
+        });
+
+        apiInterface = ApiClient.getClient().create(ApiInterface.class);
     }
+
+    @Override
+    protected void onPause()
+    {
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+
+    }
+
 
     /**
      * Manipulates the map once available.
@@ -106,7 +187,8 @@ public class MapsView extends FragmentActivity implements OnMapReadyCallback {
 
     public void askLocationPermission()
     {
-        if (ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+        {
 
             ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION}, 101);
 
@@ -174,7 +256,9 @@ public class MapsView extends FragmentActivity implements OnMapReadyCallback {
                         && perms.get(android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)
                 {
                     // All Permissions Granted
-                    //startBackgroundServiceForLocationUpdate();
+                    //stopSelf();
+                    //startActivity(new Intent(this, this.getClass()));
+
                 }
                 else
                 {
@@ -226,6 +310,28 @@ public class MapsView extends FragmentActivity implements OnMapReadyCallback {
                         17f
                 )
         );
+
+        getAllEvents();
+    }
+
+    public void getAllEvents()
+    {
+        Call<List<Event>> call = apiInterface.getEvents();
+        call.enqueue(new Callback<List<Event>>()
+        {
+            @Override
+            public void onResponse(Call<List<Event>> call, Response<List<Event>> response)
+            {
+                Log.e("MapsView", "onResponse: " + response.body());
+
+            }
+
+            @Override
+            public void onFailure(Call<List<Event>> call, Throwable t)
+            {
+                Log.i("MapsView", "onFailure: " + t.getLocalizedMessage());
+            }
+        });
     }
 
 
@@ -241,6 +347,24 @@ public class MapsView extends FragmentActivity implements OnMapReadyCallback {
     {
         centerMap();
     }
+
+
+
+    private void signOut() {
+        mGoogleSignInClient.signOut()
+                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        // ...
+                    }
+                });
+    }
+
+    private void toastMessage(String msg)
+    {
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+    }
+
 
 
 }

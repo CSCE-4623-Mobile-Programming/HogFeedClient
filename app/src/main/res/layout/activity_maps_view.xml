@@ -8,11 +8,22 @@ android:layout_height="match_parent"
 tools:context=".View.MapsView" >
 
 
+    <TextView
+        android:id="@+id/tvDisplay"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:layout_gravity="top"
+        android:background="@color/colorAccent"
+        android:text=" User: "
+        android:textColor="@color/white"
+        android:textSize="30dp" />
+
     <fragment
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginTop="45dp"
         tools:context=".View.MapsView" />
 
     <Button
@@ -28,8 +39,17 @@ tools:context=".View.MapsView" >
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="top|left"
+        android:layout_marginTop="50dp"
         android:onClick="findMe"
         android:text="Find Me" />
+
+    <Button
+        android:id="@+id/buttonSignOut"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|right"
+        android:layout_marginTop="50dp"
+        android:text="Sign Out" />
 
 
 </FrameLayout>
