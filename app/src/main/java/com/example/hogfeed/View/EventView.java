@@ -3,10 +3,14 @@ package com.example.hogfeed.View;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,15 +32,16 @@ public class EventView extends AppCompatActivity
     int id;
 
     //Components
-    TextView listID;
     TextView listTitle;
     TextView listDescription;
     TextView listQuantity;
     TextView listLocation;
     TextView listLongitude;
     TextView listLatitude;
+    ImageView listImage;
     Button buttonNo;
     Button buttonYes;
+    String filepath;
 
     //To use retrofit
     ApiInterface apiInterface;
@@ -48,23 +53,21 @@ public class EventView extends AppCompatActivity
         setContentView(R.layout.activity_event_view);
 
         //Instantiate
-        listID = (TextView) findViewById(R.id.listID);
         listTitle = (TextView) findViewById(R.id.listTitle);
         listDescription = (TextView) findViewById(R.id.listDescription);
         listQuantity = (TextView) findViewById(R.id.listQuantity);
         listLocation = (TextView) findViewById(R.id.listLocation);
         listLongitude = (TextView) findViewById(R.id.listLongitude);
         listLatitude = (TextView) findViewById(R.id.listLatitude);
+        listImage = (ImageView) findViewById(R.id.listImage);
         buttonNo = (Button) findViewById(R.id.buttonNo);
         buttonYes = (Button) findViewById(R.id.buttonYes);
         apiInterface = ApiClient.getClient().create(ApiInterface.class);
+        filepath = "Android/data/com.example.hogfeed/files/Pictures/";
 
         //Gets id from previous marker click
         Intent receive = getIntent();
         id = receive.getIntExtra("id", 0);
-
-        //Set ID title
-        listID.setText(" ID: " + id);
 
         //Sets other titles
         getOneEvent(id);
@@ -120,14 +123,42 @@ public class EventView extends AppCompatActivity
                     String location = data.getLocation();
                     String longitude = data.getLongitude();
                     String latitude = data.getLatitude();
+                    String pictureId = data.getPictureid();
+                    System.out.println(pictureId);
 
                     //sets data to text fields
-                    listTitle.setText(" Title: " + title);
-                    listDescription.setText(" Description: " + description);
-                    listQuantity.setText(" Quantity: " + quantity);
-                    listLocation.setText(" Location: " + location);
-                    listLongitude.setText(" Longitude: " + longitude);
-                    listLatitude.setText(" Latitude: " + latitude);
+                    listTitle.setText("Title: " + title);
+                    listDescription.setText("Description: " + description);
+                    listQuantity.setText("Quantity: " + quantity);
+                    listLocation.setText("Location: " + location);
+                    listLongitude.setText("Longitude: " + longitude);
+                    listLatitude.setText("Latitude: " + latitude);
+
+                    //sets image
+                    try
+                    {
+                        //gets image file path from server
+                        filepath = pictureId;
+
+                        //converts filepath into an image
+                        Bitmap picture = BitmapFactory.decodeFile(filepath);
+
+                        //Generate matrix to rotate 90 degree photo
+                        Matrix matrix = new Matrix();
+                        matrix.postRotate(90);
+
+                        //Generate final rotated picture
+                        Bitmap finalPicture = Bitmap.createBitmap(picture, 0, 0, picture.getWidth(), picture.getHeight(), matrix, true);
+
+                        //Outputs final image
+                        listImage.setImageBitmap(finalPicture);
+                    }
+
+                    catch(Exception e)
+                    {
+                        e.printStackTrace();
+                    }
+
                 }
 
             }

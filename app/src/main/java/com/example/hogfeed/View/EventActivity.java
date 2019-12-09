@@ -74,7 +74,7 @@ public class EventActivity extends AppCompatActivity
     String LAT;
     String LNG;
     int quantity;
-    String imageFilePath = "";
+    String imageFilePath = "filename";
     String time;
     double lng;
     double lat;
@@ -87,13 +87,13 @@ public class EventActivity extends AppCompatActivity
     //To use retrofit
     ApiInterface apiInterface;
 
+
+    //Initializing Components
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_event);
-
-        //Initializing Components
         buttonImage = (Button) findViewById(R.id.buttonImage);
         image = (ImageView) findViewById(R.id.image);
         tvLongitude = (TextView) findViewById(R.id.tvLongitude);
@@ -183,12 +183,16 @@ public class EventActivity extends AppCompatActivity
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == REQUEST_CAPTURE_IMAGE) {
-            if (resultCode == RESULT_OK) {
+        if (requestCode == REQUEST_CAPTURE_IMAGE)
+        {
+            if (resultCode == RESULT_OK)
+            {
                 image.setImageURI(Uri.parse(imageFilePath));
-                //this.getLocation();
-                this.saveImage();
-            } else if (resultCode == RESULT_CANCELED) {
+                //this.saveImage();
+            }
+
+            else if (resultCode == RESULT_CANCELED)
+            {
                 toastMessage("Operation cancelled");
             }
         }
@@ -220,59 +224,57 @@ public class EventActivity extends AppCompatActivity
     public void buttonSubmit(View v)
     {
         //Gathers Data from form
-        title = etTitle.getText().toString();
-        description = etDescription.getText().toString();
-        location = etLocation.getText().toString();
+        //Title
+        if(etTitle.getText().toString().isEmpty())
+        {
+            title = "title";
+        }
+        else
+        {
+            title = etTitle.getText().toString();
+        }
+
+        //Description
+        if(etDescription.getText().toString().isEmpty())
+        {
+            description = "description";
+        }
+        else
+        {
+            description = etDescription.getText().toString();
+        }
+
+        //Location
+        if(etLocation.getText().toString().isEmpty())
+        {
+            location = "location";
+        }
+        else
+        {
+            location = etLocation.getText().toString();
+        }
+
+        //Longitude
         LNG = String.valueOf(lng);
+
+        //Latitude
         LAT = String.valueOf(lat);
-        quantity = Integer.parseInt(etQuantity.getText().toString());
+
+        //Quantity
+        if(etQuantity.getText().toString().isEmpty())
+        {
+            quantity = 0;
+        }
+        else
+        {
+            quantity = Integer.parseInt(etQuantity.getText().toString());
+        }
 
         //Sends data to server
-        postEvent(LAT, location, LNG, quantity, title, "pictureid", description);
+        postEvent(LAT, location, LNG, quantity, title, imageFilePath, description);
 
         //Closes form
         finish();
-
-    }
-
-    public boolean inputValid(String latitude, String location, String longitude, int quantity, String title, String pictureid, String description)
-    {
-        //Location field has to be filled out
-        if (location.length() == 0)
-        {
-            toastMessage("Enter a location");
-            return false;
-        }
-
-        //Quantity can't be less than or equal to 0
-        if(quantity <= 0)
-        {
-            toastMessage("Enter a valid quantity");
-            return false;
-        }
-
-        //Title field has to be filled out
-        if(title.length() == 0)
-        {
-            toastMessage("Enter a title");
-            return false;
-        }
-
-        //Picture id has to be given
-        if(pictureid.length() == 0)
-        {
-            toastMessage("Take an image");
-            return false;
-        }
-
-        //Description has to be filled out
-        if(description.length() == 0)
-        {
-            toastMessage("Enter a description");
-            return false;
-        }
-
-        return true;
 
     }
 

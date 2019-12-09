@@ -104,7 +104,6 @@ public class Event
 
     }
 
-
     //JSON Format
     @Override
     public String toString()
