@@ -1,6 +1,7 @@
 package com.example.hogfeed.View;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
@@ -44,6 +45,7 @@ import com.example.hogfeed.Model.ApiInterface;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -53,30 +55,47 @@ import retrofit2.Response;
 
 
 
-public class MapsView extends FragmentActivity implements OnMapReadyCallback {
-
-    private GoogleMap mMap;
+public class MapsView extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener
+{
+    //Google
+    GoogleMap mMap;
     GoogleSignInClient mGoogleSignInClient;
+    private MarkerOptions userLocation;
 
+    //Components
     Button signOut;
-
     TextView display;
 
-    final private int REQUEST_CODE_ASK_MULTIPLE_PERMISSIONS = 124;
-    private gpsHelper gps;
-    private MarkerOptions userLocation;
-    private boolean initialLocationFlag;
-
+    //Variables
     double lat;
     double lng;
+    List<Event> events;
 
+    gpsHelper helper;
+
+    HashMap<Integer, LatLng> latLngList;
+    private boolean initialLocationFlag;
+    final private int REQUEST_CODE_ASK_MULTIPLE_PERMISSIONS = 124;
+
+    //To use retrofit
     ApiInterface apiInterface;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps_view);
 
+        //Initialize
+        signOut = findViewById(R.id.buttonSignOut);
+        display = findViewById(R.id.tvDisplay);
+        events = new ArrayList<Event>();
+        latLngList = new HashMap<Integer, LatLng>();
+        apiInterface = ApiClient.getClient().create(ApiInterface.class);
+
+        helper = new gpsHelper(this);
+
+        //Asks for location permissions
         askLocationPermission();
 
         // Configure sign-in to request the user's ID, email address, and basic
@@ -88,46 +107,46 @@ public class MapsView extends FragmentActivity implements OnMapReadyCallback {
         // Build a GoogleSignInClient with the options specified by gso.
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
-        signOut = findViewById(R.id.buttonSignOut);
-
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-
-        display = findViewById(R.id.tvDisplay);
+        //Checks to see if user is signed in
         GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
 
+        //Gets Gmail SignIn info
         if(acct != null)
         {
             String userName = acct.getDisplayName();
             String userEmail = acct.getEmail();
             String userId = acct.getId();
 
+            //Eliminates @------.com from email name
+            userEmail = userEmail.substring(0, userEmail.indexOf("@"));
 
-            display.setText("User: " + userName);
+            //Displays users username
+            display.setText("User: " + userEmail);
         }
 
-
+        //onClick listener for sign out button
         signOut.setOnClickListener(new View.OnClickListener()
         {
             @Override
             public void onClick(View v)
             {
-                switch (v.getId()) {
+                switch (v.getId())
+                {
                     case R.id.buttonSignOut:
                         signOut();
                         toastMessage("Successfully Signed Out");
                         finish();
                         break;
-                    // ...
                 }
 
             }
         });
 
-        apiInterface = ApiClient.getClient().create(ApiInterface.class);
     }
 
     @Override
@@ -140,9 +159,15 @@ public class MapsView extends FragmentActivity implements OnMapReadyCallback {
     protected void onResume()
     {
         super.onResume();
-
+        getAllEvents();
     }
 
+    @Override
+    protected void onRestart()
+    {
+        super.onRestart();
+        getAllEvents();
+    }
 
     /**
      * Manipulates the map once available.
@@ -154,72 +179,231 @@ public class MapsView extends FragmentActivity implements OnMapReadyCallback {
      * installed Google Play services and returned to the app.
      */
     @Override
-    public void onMapReady(GoogleMap googleMap) {
+    public void onMapReady(GoogleMap googleMap)
+    {
+        //Instantiate Google Map Api Fragment
         mMap = googleMap;
 
-        //Imports Style
-        //MapStyleOptions mapStyleOptions = MapStyleOptions.loadRawResourceStyle(this, R.raw.googleStyle);
-        //googleMap.setMapType(mapStyleOptions);
-
-        try {
+        //Imports Custom Map Style
+        try
+        {
             // Customise the styling of the base map using a JSON object defined
             // in a raw resource file.
             boolean success = mMap.setMapStyle(
                     MapStyleOptions.loadRawResourceStyle(
                             MapsView.this, R.raw.google_json));
 
-            if (!success) {
+            if (!success)
+            {
                 Log.e("Map", "Style parsing failed.");
             }
-        } catch (Resources.NotFoundException e) {
+        }
+
+        catch (Resources.NotFoundException e) {
             Log.e("Map", "Can't find style.", e);
         }
 
         initialLocationFlag = false;
+
+        //Gets events from server
+        getAllEvents();
+
+        // Enable on click listener for marker
+        mMap.setOnMarkerClickListener(this);
+
+        //Centers Map on User's current location
         centerMap();
-        // Add a marker in Sydney and move the camera
-        //LatLng sydney = new LatLng(-34, 151);
-        //mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        //mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
-
-
     }
 
+    @Override
+    public boolean onMarkerClick(Marker marker)
+    {
+        //Checks what marker was clicked
+        Integer id = (Integer) marker.getTag();
+
+        //Goes to new page with that marker
+        if(id != null)
+        {
+            //Go to new activity
+            Intent i = new Intent(this, EventView.class);
+            i.putExtra("id", id);
+            startActivity(i);
+        }
+
+        return false;
+    }
+
+    //Gets Users current location and goes to it on map
+    public void centerMap()
+    {
+        //Helper to get current location
+        gpsHelper helper = new gpsHelper(this);
+
+        //get current latitude & longitude
+        lat = helper.getLatitude();
+        lng = helper.getLongitude();
+
+        //Move camera to position of taken photo
+        LatLng currentPos = new LatLng(lat,lng);
+
+        //Instantiate user location marker with curr user location
+        userLocation = new MarkerOptions().position(currentPos).title("My Location");
+
+        //Set marker icon
+        //userLocation.icon(BitmapDescriptorFactory.fromResource(R.drawable.userlocation));
+        userLocation.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+
+        //Add/Update Marker
+        mMap.addMarker(userLocation);
+
+        //Move view to current postion
+        mMap.animateCamera(
+                CameraUpdateFactory.newLatLngZoom(
+                        currentPos,
+                        18f
+                )
+        );
+    }
+
+    //Gets events from server
+    public void getAllEvents()
+    {
+        Call<List<Event>> call = apiInterface.getEvents();
+        call.enqueue(new Callback<List<Event>>()
+        {
+            @Override
+            public void onResponse(Call<List<Event>> call, Response<List<Event>> response)
+            {
+                //If Get method is successful
+                if(response.isSuccessful())
+                {
+                    //Saves Json from server to list
+                    events = response.body();
+
+                    //Goes through all events on server
+                    for(Event e: events)
+                    {
+                        //Gets id, lats, and longs from server
+                        int id = e.getId();
+                        double latit = Double.parseDouble(e.getLatitude());
+                        double longi = Double.parseDouble(e.getLongitude());
+
+                        //Stores lats and longs as LatLng
+                        LatLng ll = new LatLng(latit, longi);
+
+                        //List that stores lats lngs
+                        latLngList.put(id, ll);
+
+                    }
+
+                    //Clears map of deleted markers
+                    mMap.clear();
+
+                    //adds current location marker
+                    lat = helper.getLatitude();
+                    lng = helper.getLongitude();
+                    LatLng currentPos = new LatLng(lat,lng);
+                    userLocation = new MarkerOptions().position(currentPos).title("My Location");
+                    userLocation.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+                    mMap.addMarker(userLocation);
+
+                    //Iterator for locations list
+                    Iterator it = latLngList.entrySet().iterator();
+
+                    //Goes through list with iterator
+                    while(it.hasNext())
+                    {
+                        Map.Entry mapElement = (Map.Entry) it.next();
+
+                        //Gets LatLng from Hashmap
+                        LatLng latLng = (LatLng) mapElement.getValue();
+
+                        //Gets key from map
+                        String name = mapElement.getKey().toString();
+
+                        //Adds markers
+                        Marker mk = mMap.addMarker(new MarkerOptions().position(latLng).title(name));
+                        mk.setTag(Integer.parseInt(name));
+                        mk.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.event));
+                    }
+
+                    //clear hashmap
+                    latLngList.clear();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Event>> call, Throwable t)
+            {
+                Log.i("MapsView", "onFailure: " + t.getLocalizedMessage());
+            }
+        });
+    }
+
+    //GET
+    private void getOneEvent(int id)
+    {
+        Call<Event> eventCall = apiInterface.getEvent(id);
+        eventCall.enqueue(new Callback<Event>()
+        {
+            @Override
+            public void onResponse(Call<Event> call, Response<Event> response)
+            {
+                Log.e("MapsView", "onResponse: " + response.body() );
+            }
+
+            @Override
+            public void onFailure(Call<Event> call, Throwable t)
+            {
+                Log.e("MapsView", "onFailure: " + t.getLocalizedMessage() );
+            }
+        });
+    }
+
+    //onClick Listener to go to form to create event
+    public void createEvent(View v)
+    {
+        Intent i = new Intent(this, EventActivity.class);
+        i.putExtra("latitude", lat);
+        i.putExtra("longitude", lng);
+        startActivity(i);
+    }
+
+    //onClick Listener to center map on users location -- aka refresh page
+    public void findMe(View v)
+    {
+        centerMap();
+        getAllEvents();
+    }
+
+
+    //Method to signout from Google
+    private void signOut()
+    {
+        mGoogleSignInClient.signOut()
+                .addOnCompleteListener(this, new OnCompleteListener<Void>()
+                {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task)
+                    {
+                        // ...
+                    }
+                });
+    }
+
+    //Toast Message
+    private void toastMessage(String msg)
+    {
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+    }
+
+    //Asks user for location permission
     public void askLocationPermission()
     {
         if (ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
         {
-
             ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION}, 101);
-
         }
-    }
-
-    private void checkAndAddPermission() {
-        List<String> permissionsNeeded = new ArrayList<>();
-
-        final List<String> permissionsList = new ArrayList<>();
-        if (!addPermission(permissionsList, android.Manifest.permission.ACCESS_FINE_LOCATION))
-            permissionsNeeded.add("GPS");
-
-        if (!addPermission(permissionsList, android.Manifest.permission.ACCESS_COARSE_LOCATION))
-            permissionsNeeded.add("Coarse");
-
-        if (permissionsList.size() > 0) {
-            if (permissionsNeeded.size() > 0) {
-                // Need Rationale
-                String message = "You need to grant access to " + permissionsNeeded.get(0);
-                for (int i = 1; i < permissionsNeeded.size(); i++)
-                    message = message + ", " + permissionsNeeded.get(i);
-
-                ActivityCompat.requestPermissions(this, permissionsList.toArray(new String[permissionsList.size()]),
-                        REQUEST_CODE_ASK_MULTIPLE_PERMISSIONS);
-            } else {
-                ActivityCompat.requestPermissions(this, permissionsList.toArray(new String[permissionsList.size()]),
-                        REQUEST_CODE_ASK_MULTIPLE_PERMISSIONS);
-            }
-        }
-
     }
 
     // This method adds permissions to the system
@@ -229,8 +413,9 @@ public class MapsView extends FragmentActivity implements OnMapReadyCallback {
         if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED)
         {
             permissionsList.add(permission);
+
             // Check for Rationale Option
-            if (!shouldShowRequestPermissionRationale(permission))
+            if(!shouldShowRequestPermissionRationale(permission))
                 return false;
         }
         return true;
@@ -251,6 +436,7 @@ public class MapsView extends FragmentActivity implements OnMapReadyCallback {
                 // Fill with results
                 for (int i = 0; i < permissions.length; i++)
                     perms.put(permissions[i], grantResults[i]);
+
                 // Check for ACCESS_FINE_LOCATION
                 if (perms.get(android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
                         && perms.get(android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)
@@ -260,6 +446,7 @@ public class MapsView extends FragmentActivity implements OnMapReadyCallback {
                     //startActivity(new Intent(this, this.getClass()));
 
                 }
+
                 else
                 {
                     // Permission Denied
@@ -272,99 +459,4 @@ public class MapsView extends FragmentActivity implements OnMapReadyCallback {
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
-
-    public void centerMap()
-    {
-        gpsHelper helper = new gpsHelper(this);
-
-        //get current latitude & longitude
-        lat = helper.getLatitude();
-        lng = helper.getLongitude();
-
-        //Move camera to position of taken photo
-        LatLng currentPos = new LatLng(lat,lng);
-
-        //Instantiate user location marker with curr user location
-        userLocation = new MarkerOptions().position(currentPos).title("My Location");
-
-        //Set marker icon
-        userLocation.icon(BitmapDescriptorFactory.fromResource(R.drawable.userlocation));
-
-        //Add/Update Marker
-        if(!initialLocationFlag)
-        {
-            mMap.addMarker(userLocation);
-
-            initialLocationFlag = true;
-        }
-
-        else
-        {
-            userLocation.position(currentPos);
-        }
-
-        //Move view to current postion
-        mMap.animateCamera(
-                CameraUpdateFactory.newLatLngZoom(
-                        currentPos,
-                        17f
-                )
-        );
-
-        getAllEvents();
-    }
-
-    public void getAllEvents()
-    {
-        Call<List<Event>> call = apiInterface.getEvents();
-        call.enqueue(new Callback<List<Event>>()
-        {
-            @Override
-            public void onResponse(Call<List<Event>> call, Response<List<Event>> response)
-            {
-                Log.e("MapsView", "onResponse: " + response.body());
-
-            }
-
-            @Override
-            public void onFailure(Call<List<Event>> call, Throwable t)
-            {
-                Log.i("MapsView", "onFailure: " + t.getLocalizedMessage());
-            }
-        });
-    }
-
-
-    public void createEvent(View v)
-    {
-        Intent i = new Intent(this, EventActivity.class);
-        i.putExtra("latitude", lat);
-        i.putExtra("longitude", lng);
-        startActivity(i);
-    }
-
-    public void findMe(View v)
-    {
-        centerMap();
-    }
-
-
-
-    private void signOut() {
-        mGoogleSignInClient.signOut()
-                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        // ...
-                    }
-                });
-    }
-
-    private void toastMessage(String msg)
-    {
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-    }
-
-
-
 }

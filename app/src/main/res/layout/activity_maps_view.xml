@@ -5,6 +5,7 @@ xmlns:map="http://schemas.android.com/apk/res-auto"
 xmlns:tools="http://schemas.android.com/tools"
 android:layout_width="match_parent"
 android:layout_height="match_parent"
+    android:orientation="vertical"
 tools:context=".View.MapsView" >
 
 
@@ -39,7 +40,7 @@ tools:context=".View.MapsView" >
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="top|left"
-        android:layout_marginTop="50dp"
+        android:layout_marginTop="45dp"
         android:onClick="findMe"
         android:text="Find Me" />
 
@@ -48,7 +49,7 @@ tools:context=".View.MapsView" >
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="top|right"
-        android:layout_marginTop="50dp"
+        android:layout_marginTop="45dp"
         android:text="Sign Out" />
 
 

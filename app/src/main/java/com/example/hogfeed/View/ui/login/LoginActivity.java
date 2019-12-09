@@ -1,28 +1,12 @@
 package com.example.hogfeed.View.ui.login;
 
-import android.app.Activity;
-
-import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProviders;
-
 import android.content.Intent;
 import android.os.Bundle;
 
-import androidx.annotation.Nullable;
-import androidx.annotation.StringRes;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
-import android.view.inputmethod.EditorInfo;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ProgressBar;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.hogfeed.R;
 import com.example.hogfeed.View.MapsView;
@@ -35,32 +19,34 @@ import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
 
-public class LoginActivity extends AppCompatActivity {
-
-    TextView email;
-    TextView password;
-
+public class LoginActivity extends AppCompatActivity
+{
+    //Google SigninButton
     SignInButton signin;
     int RC_SIGN_IN = 0;
 
+    //Google SigninClient
     GoogleSignInClient mGoogleSignInClient;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
+        //Signin Button + onClick Listener
         signin = (SignInButton) findViewById(R.id.sign_in_button);
         signin.setOnClickListener(new View.OnClickListener()
         {
             @Override
             public void onClick(View v)
             {
-                switch (v.getId()) {
+                switch (v.getId())
+                {
                     case R.id.sign_in_button:
                         signIn();
                         break;
-                    // ...
+
                 }
             }
         });
@@ -77,13 +63,16 @@ public class LoginActivity extends AppCompatActivity {
 
     }
 
-    private void signIn() {
+    //Method to signin via Google SSO
+    private void signIn()
+    {
         Intent signInIntent = mGoogleSignInClient.getSignInIntent();
         startActivityForResult(signInIntent, RC_SIGN_IN);
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    public void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
         super.onActivityResult(requestCode, resultCode, data);
 
         // Result returned from launching the Intent from GoogleSignInClient.getSignInIntent(...);
@@ -95,15 +84,21 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-    private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
-        try {
+    //Handles Google Sign In Result
+    private void handleSignInResult(Task<GoogleSignInAccount> completedTask)
+    {
+        try
+        {
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
 
             // Signed in successfully, show authenticated UI.
             Intent i = new Intent(LoginActivity.this, MapsView.class);
             startActivity(i);
 
-        } catch (ApiException e) {
+        }
+
+        catch (ApiException e)
+        {
             // The ApiException status code indicates the detailed failure reason.
             // Please refer to the GoogleSignInStatusCodes class reference for more information.
             Log.w("Error", "signInResult:failed code=" + e.getStatusCode());
@@ -111,18 +106,5 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-    /*
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        // Check for existing Google Sign In account, if the user is already signed in
-        // the GoogleSignInAccount will be non-null.
-        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
-        //updateUI(account);
-
-
-    }
-    */
 
 }

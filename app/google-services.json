@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "930957518895",
+    "firebase_url": "https://serious-physics-257304.firebaseio.com",
+    "project_id": "serious-physics-257304",
+    "storage_bucket": "serious-physics-257304.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:930957518895:android:1b825ef2d8f7835514feda",
+        "android_client_info": {
+          "package_name": "com.example.hogfeed"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "930957518895-vsdu6q3r87o70i130f7trn8a0v51jmbc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.hogfeed",
+            "certificate_hash": "c1673e608e46f00f47183fe29edaacaa0acf8256"
+          }
+        },
+        {
+          "client_id": "930957518895-k8fk85k1u9ob6fppd1ic7sdh3m1vi0nj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCOouG1BHelxp1tooIpYLaSNDDYKImAf10"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "930957518895-k8fk85k1u9ob6fppd1ic7sdh3m1vi0nj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

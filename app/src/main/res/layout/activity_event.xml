@@ -110,7 +110,8 @@
         android:id="@+id/buttonSubmit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="50dp"
+        android:layout_marginTop="40dp"
+        android:layout_gravity="bottom|end"
         android:onClick="buttonSubmit"
         android:text="Submit Post" />
 

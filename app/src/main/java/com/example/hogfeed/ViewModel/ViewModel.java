@@ -7,9 +7,11 @@ import androidx.lifecycle.AndroidViewModel;
 
 
 //ViewModel will store and manage UI-related data
-public class ViewModel extends AndroidViewModel {
+public class ViewModel extends AndroidViewModel
+{
 
-    public ViewModel(@NonNull Application application) {
+    public ViewModel(@NonNull Application application)
+    {
         super(application);
     }
 

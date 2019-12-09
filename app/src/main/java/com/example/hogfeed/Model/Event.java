@@ -11,7 +11,6 @@ public class Event
         this.id = id;
     }
 
-
     //Latitude
     private String latitude;
     public String getLatitude() {
@@ -30,7 +29,6 @@ public class Event
         this.location = location;
     }
 
-
     //Longitude
     private String longitude;
     public String getLongitude() {
@@ -39,7 +37,6 @@ public class Event
     public void setLongitude(String longitude) {
         this.longitude = longitude;
     }
-
 
     //Quantity
     private int quantity;
@@ -50,7 +47,6 @@ public class Event
         this.quantity = quantity;
     }
 
-
     //Title
     private String title;
     public String getTitle() {
@@ -60,7 +56,6 @@ public class Event
         this.title = title;
     }
 
-
     //PictureID
     private String pictureid;
     public String getPictureid() {
@@ -69,7 +64,6 @@ public class Event
     public void setPictureid(String pictureid) {
         this.pictureid = pictureid;
     }
-
 
     //Description
     private String description;
@@ -104,7 +98,14 @@ public class Event
         this.description = description;
     }
 
+    //Constructor
+    public Event()
+    {
 
+    }
+
+
+    //JSON Format
     @Override
     public String toString()
     {
@@ -116,9 +117,7 @@ public class Event
                 ", quantity=" + quantity +
                 ", title=" + title +
                 ", pictureid=" + pictureid +
-                ", description" + description +
+                ", description=" + description +
                 "}";
     }
-
-
 }

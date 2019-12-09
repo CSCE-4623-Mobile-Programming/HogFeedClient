@@ -36,118 +36,120 @@ import com.example.hogfeed.View.ui.login.LoginActivity;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
 import java.io.IOException;
 import java.security.Security;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class EventActivity extends AppCompatActivity {
-
+public class EventActivity extends AppCompatActivity
+{
+    //Components
     Button buttonImage;
     ImageView image;
     TextView tvLongitude;
     TextView tvLatitude;
-
     EditText etTitle;
     EditText etDescription;
     EditText etLocation;
     EditText etQuantity;
 
+    //Variables to get/save info
     String title;
     String description;
     String location;
     String LAT;
     String LNG;
     int quantity;
-
-    private static final int REQUEST_CAPTURE_IMAGE = 100;
-    private static final int REQUEST_PERMISSION = 101;
-
     String imageFilePath = "";
     String time;
-
-    Geocoder geocoder;
-    String longitude;
-    String latitude;
     double lng;
     double lat;
 
+
+    //For Permissions
+    private static final int REQUEST_CAPTURE_IMAGE = 100;
+    private static final int REQUEST_PERMISSION = 101;
+
+    //To use retrofit
     ApiInterface apiInterface;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_event);
 
-        askStoragePermission();
-
-
-        geocoder = new Geocoder(this, Locale.getDefault());
-
+        //Initializing Components
         buttonImage = (Button) findViewById(R.id.buttonImage);
         image = (ImageView) findViewById(R.id.image);
-
         tvLongitude = (TextView) findViewById(R.id.tvLongitude);
         tvLatitude = (TextView) findViewById(R.id.tvLatitude);
-
-        //title names
         etTitle = (EditText) findViewById(R.id.etTitle);
         etDescription = (EditText) findViewById(R.id.etDescription);
         etLocation = (EditText) findViewById(R.id.etLocation);
         etQuantity = (EditText) findViewById(R.id.etQuantity);
 
+        //Asks User If They Can Save -- for images
+        askStoragePermission();
 
-        //information received
+        //User's Current Location received from MapsView
         Intent receive = getIntent();
         lat = receive.getDoubleExtra("latitude", 0);
         lng = receive.getDoubleExtra("longitude", 0);
 
-        //Display lat/lng field
+        //Display Current Location Fields
         tvLatitude.setText("Latitude: " + lat);
         tvLongitude.setText("Longitude: " + lng);
 
-
-        //getLocation();
         //Take an image onclick listener
-        buttonImage.setOnClickListener(new View.OnClickListener() {
+        buttonImage.setOnClickListener(new View.OnClickListener()
+        {
             @Override
             public void onClick(View view) {
-                //askLocationPermission();
-                System.out.println("working");
+                //opens camera to take image
                 openCameraIntent();
 
             }
-
-
         });
 
-
+        //Enables Retrofit Use for REST
         apiInterface = ApiClient.getClient().create(ApiInterface.class);
 
 
     }
 
-    private void askStoragePermission() {
+    //Asks User to Write to Storage -- for images
+    private void askStoragePermission()
+    {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
-                PackageManager.PERMISSION_GRANTED) {
+                PackageManager.PERMISSION_GRANTED)
+        {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_PERMISSION);
         }
 
     }
 
-
-    private void openCameraIntent() {
+    //Captures an image
+    private void openCameraIntent()
+    {
         Intent pictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
-        if (pictureIntent.resolveActivity(getPackageManager()) != null) {
+        if (pictureIntent.resolveActivity(getPackageManager()) != null)
+        {
             File imageFile = null;
 
             try {
@@ -157,18 +159,13 @@ public class EventActivity extends AppCompatActivity {
                 return;
             }
 
-            if (imageFile != null) {
+            if (imageFile != null)
+            {
                 Uri photoUri = FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", imageFile);
                 pictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
                 startActivityForResult(pictureIntent, REQUEST_CAPTURE_IMAGE);
-
             }
-
-
-            System.out.println("image activity");
         }
-
-
     }
 
     @Override
@@ -197,45 +194,17 @@ public class EventActivity extends AppCompatActivity {
         }
     }
 
+    //Saves image -- need to implement
     public void saveImage() {
         //dbHelper.insertData(imageFilePath, longitude, latitude, time);
         //toastMessage("Image and content saved to database");
 
     }
 
-    /*
-    public void getLocation()
+
+    //Makes File for image
+    private File makeImageFile() throws IOException
     {
-
-        try
-        {
-            LocationManager lm = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
-            Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            lon = location.getLongitude();
-            lat = location.getLatitude();
-
-            longitude = Double.toString(lon);
-            latitude = Double.toString(lat);
-
-            //toastMessage(longitude);
-
-            tvLongitude.setText("Longitude: " + longitude);
-            tvLatitude.setText("Latitude: " + latitude);
-        }
-
-        catch(SecurityException e)
-        {
-            e.printStackTrace();
-            toastMessage("Error with location");
-        }
-
-
-    }
-
-    */
-
-
-    private File makeImageFile() throws IOException {
         time = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
         String imageName = "IMG_" + time + "_";
         File storage = this.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
@@ -244,12 +213,13 @@ public class EventActivity extends AppCompatActivity {
 
         System.out.println("File Path: " + imageFilePath);
 
-
         return image;
     }
 
-    public void buttonSubmit(View v) {
-
+    //Post Event
+    public void buttonSubmit(View v)
+    {
+        //Gathers Data from form
         title = etTitle.getText().toString();
         description = etDescription.getText().toString();
         location = etLocation.getText().toString();
@@ -257,14 +227,11 @@ public class EventActivity extends AppCompatActivity {
         LAT = String.valueOf(lat);
         quantity = Integer.parseInt(etQuantity.getText().toString());
 
+        //Sends data to server
+        postEvent(LAT, location, LNG, quantity, title, "pictureid", description);
 
-
-        //postEvent(LAT, location, LNG, quantity, title, "pictureid", description);
-        //getOneEvent(5);
-        //getAllEvents();
+        //Closes form
         finish();
-
-
 
     }
 
@@ -309,145 +276,97 @@ public class EventActivity extends AppCompatActivity {
 
     }
 
+    //Toast Messages to display texts to user
     private void toastMessage(String msg) {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }
 
-    /*private class SaveEventTask extends AsyncTask<Void, Void, Boolean> {
-        @Override
-        protected void onPreExecute() {
-            this.savingEventAlert.show();
-        }
 
-        @Override
-        protected Boolean doInBackground(Void... params) {
-            Event event = (new Event()).
-                    setId(new UUID(0,0)).
-                    setTitle(title).
-                    setDescription(description).
-                    setLocation(location).
-                    setLongitude(LNG).
-                    setLatitude(LAT).
-                    setPictureId("pictureid").
-                    setQuantity(2);
+    //REST CALLS
+    //GET
+    private void getAllEvents()
+    {
+        Call<List<Event>> call = apiInterface.getEvents();
+        call.enqueue(new Callback<List<Event>>()
+        {
+            @Override
+            public void onResponse(Call<List<Event>> call, Response<List<Event>> response)
+            {
+                Log.e("EventActivity", "onResponse: " + response.body());
 
-            ApiResponse<Event> apiResponse = (
-                    (event.getId().equals(new UUID(0, 0)))
-                            ? (new EventService()).createEvent(event)
-                            : (new EventService()).updateEvent(event)
-            );
-
-            if (apiResponse.isValidResponse()) {
-                eventTransition.setLatitude(apiResponse.getData().getLatitude());
-                eventTransition.setLocation(apiResponse.getData().getLocation());
-                eventTransition.setLongitude(apiResponse.getData().getLongitude());
-                eventTransition.setQuantity(apiResponse.getData().getQuantity());
-                eventTransition.setTitle(apiResponse.getData().getTitle());
-                eventTransition.setPictureId(apiResponse.getData().getPictureId());
-                eventTransition.setDescription(apiResponse.getData().getDescription());
             }
 
-            return apiResponse.isValidResponse();
-        }
+            @Override
+            public void onFailure(Call<List<Event>> call, Throwable t)
+            {
+                Log.i("EventActivity", "onFailure: " + t.getLocalizedMessage());
 
-        @Override
-        protected void onPostExecute(Boolean successfulSave) {
-            String message;
+            }
+        });
+    }
 
-            savingEventAlert.dismiss();
-
-            if (successfulSave) {
-                message = "Event was successfully posted";
-            } else {
-                message = "Event posting failed";
+    //GET
+    private void getOneEvent(int id)
+    {
+        Call<Event> eventCall = apiInterface.getEvent(id);
+        eventCall.enqueue(new Callback<Event>()
+        {
+            @Override
+            public void onResponse(Call<Event> call, Response<Event> response)
+            {
+                Log.e("EventActivity", "onResponse: " + response.body() );
             }
 
-            new AlertDialog.Builder(EventActivity.this).
-                    setMessage(message).
-                    setPositiveButton(
-                            "Dismiss",
-                            new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int id) {
-                                    dialog.dismiss();
-                                }
-                            }
-                    ).
-                    create().
-                    show();
-        }
-
-        private AlertDialog savingEventAlert;
-
-        private SaveEventTask() {
-            this.savingEventAlert = new AlertDialog.Builder(EventActivity.this).
-                    setMessage("Posting event..").
-                    create();
-        }
-
-    }*/
-
-        //GET
-        private void getAllEvents()
-        {
-            Call<List<Event>> call = apiInterface.getEvents();
-            call.enqueue(new Callback<List<Event>>()
+            @Override
+            public void onFailure(Call<Event> call, Throwable t)
             {
-                @Override
-                public void onResponse(Call<List<Event>> call, Response<List<Event>> response)
-                {
-                    Log.e("EventActivity", "onResponse: " + response.body());
+                Log.e("EventActivity", "onFailure: " + t.getLocalizedMessage() );
+            }
+        });
+    }
 
-                }
+    //POST
+    private void postEvent(String latitude, String location, String longitude, int quantity, String title, String pictureid, String description)
+    {
+        Event event = new Event(latitude, location, longitude, quantity, title, pictureid, description);
 
-                @Override
-                public void onFailure(Call<List<Event>> call, Throwable t)
-                {
-                    Log.i("EventActivity", "onFailure: " + t.getLocalizedMessage());
-
-                }
-            });
-        }
-
-        private void getOneEvent(int id)
+        Call<Event> eventPostCall = apiInterface.postEvent(event);
+        eventPostCall.enqueue(new Callback<Event>()
         {
-            Call<Event> eventCall = apiInterface.getEvent(id);
-            eventCall.enqueue(new Callback<Event>() {
-                @Override
-                public void onResponse(Call<Event> call, Response<Event> response) {
-                    Log.e("EventActivity", "onResponse: " + response.body() );
-                }
-
-                @Override
-                public void onFailure(Call<Event> call, Throwable t) {
-                    Log.e("EventActivity", "onFailure: " + t.getLocalizedMessage() );
-                }
-            });
-        }
-
-        //POST
-        private void postEvent(String latitude, String location, String longitude, int quantity, String title, String pictureid, String description)
-        {
-            Event event = new Event(latitude, location, longitude, quantity, title, pictureid, description);
-
-            Call<Event> eventPostCall = apiInterface.postEvent(event);
-            eventPostCall.enqueue(new Callback<Event>()
+            @Override
+            public void onResponse(Call<Event> call, Response<Event> response)
             {
-                @Override
-                public void onResponse(Call<Event> call, Response<Event> response)
-                {
-                    Log.e("EventActivity", "onResponse: " + response.body());
-                    toastMessage("Event successfully posted");
-                }
+                Log.e("EventActivity", "onResponse: " + response.body());
+                toastMessage("Event successfully posted");
+            }
 
-                @Override
-                public void onFailure(Call<Event> call, Throwable t)
-                {
-                    Log.i("EventActivity", "onFailure: " + t.getLocalizedMessage());
-                    toastMessage("Event posting was unsuccessful");
-                }
-            });
-        }
+            @Override
+            public void onFailure(Call<Event> call, Throwable t)
+            {
+                Log.i("EventActivity", "onFailure: " + t.getLocalizedMessage());
+                toastMessage("Event posting was unsuccessful");
+            }
+        });
+    }
 
+    //DELETE
+    private void deleteOneEvent(int id)
+    {
+        Call<Event> eventCall = apiInterface.deleteEvent(id);
+        eventCall.enqueue(new Callback<Event>()
+        {
+            @Override
+            public void onResponse(Call<Event> call, Response<Event> response)
+            {
+                Log.e("EventActivity", "onResponse: " + response.body() );
+            }
 
+            @Override
+            public void onFailure(Call<Event> call, Throwable t)
+            {
+                //Log.e("EventActivity", "onFailure: " + t.getLocalizedMessage() );
+            }
+        });
+    }
 
 }
